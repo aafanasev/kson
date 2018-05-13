@@ -1,0 +1,39 @@
+apply plugin: "maven-publish"
+apply plugin: "com.jfrog.bintray"
+
+publishing {
+    publications {
+        Kson(MavenPublication) {
+            from components.java
+            groupId kson.group
+            artifactId libName
+            version kson.version
+        }
+    }
+}
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+
+    publications = ["Kson"]
+
+    pkg {
+        repo = "maven"
+        name = libName
+
+        vcsUrl = "https://github.com/aafanasev/kson.git"
+
+        labels = ["gson", "kson", "kapt"]
+        licenses = ["Apache-2.0"]
+
+        publicDownloadNumbers = true
+
+        version {
+            name = kson.version
+            desc = libDesc
+            released = new Date()
+        }
+    }
+
+}

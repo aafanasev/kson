@@ -1,4 +1,13 @@
-apply plugin: 'kotlin'
+ext.libName = "kson-annotation"
+ext.libDesc = "Kson - Annotations"
+
+apply plugin: "kotlin"
+apply from: "$rootDir/buildsystem/dependencies.gradle"
+apply from: "$rootDir/buildsystem/publish.gradle"
+
+archivesBaseName = libName
+group = kson.group
+version = kson.version
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7"
