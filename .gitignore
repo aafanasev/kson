@@ -1,0 +1,23 @@
+# Configuration files
+local.properties
+
+# Temp files
+.DS_Store
+Thumbs.db
+*.log
+
+# Build files
+/build
+/kson-annotation/build
+/kson-annotation/out
+/kson-processor/build
+/kson-processor/out
+/sample/build
+/sample/out
+
+# IDE files
+/.idea
+*.iml
+
+# Gradle files
+/.gradle

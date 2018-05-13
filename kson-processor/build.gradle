@@ -1,0 +1,10 @@
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-kapt'
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7"
+    compile 'com.squareup:kotlinpoet:0.7.0'
+    compile 'com.google.code.gson:gson:2.8.2'
+
+    compile project(':kson-annotation')
+}
