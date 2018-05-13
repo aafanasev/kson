@@ -1,6 +1,6 @@
 package com.aafanasev.kson.processor
 
-import com.github.aafanasev.kson.annotation.Kson
+import com.aafanasev.kson.annotation.Kson
 import com.google.gson.Gson
 import com.google.gson.TypeAdapter
 import com.google.gson.TypeAdapterFactory
