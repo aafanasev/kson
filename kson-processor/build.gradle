@@ -11,7 +11,7 @@ group = kson.group
 version = kson.version
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     compile 'com.squareup:kotlinpoet:0.7.0'
     compile 'com.google.code.gson:gson:2.8.2'
 
