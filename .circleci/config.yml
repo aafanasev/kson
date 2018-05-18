@@ -28,29 +28,40 @@ jobs:
       - run: gradle test
 
   deploy:
-      docker:
-        - image: circleci/openjdk:8-jdk
+    docker:
+      - image: circleci/openjdk:8-jdk
 
-      working_directory: ~/repo
+    working_directory: ~/repo
 
-      environment:
-        JVM_OPTS: -Xmx3200m
-        TERM: dumb
+    environment:
+      JVM_OPTS: -Xmx3200m
+      TERM: dumb
 
-      steps:
-        - checkout
+    steps:
+      - checkout
 
-        - restore_cache:
-            keys:
-            - v1-dependencies-{{ checksum "build.gradle" }}
-            - v1-dependencies-
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "build.gradle" }}
+          - v1-dependencies-
 
-        - run: gradle dependencies
+      - run: gradle dependencies
 
-        - save_cache:
-            paths:
-              - ~/.gradle
-            key: v1-dependencies-{{ checksum "build.gradle" }}
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: v1-dependencies-{{ checksum "build.gradle" }}
 
-        - run: gradle :kson-annotation:bintrayUpload :kson-processor:bintrayUpload -PbintrayUser=$BINTRAY_USER -PbintrayApiKey=$BINTRAY_API_KEY
+      - run: gradle :kson-annotation:bintrayUpload :kson-processor:bintrayUpload -PbintrayUser=$BINTRAY_USER -PbintrayApiKey=$BINTRAY_API_KEY
 
+workflows:
+  version: 2
+  build-and-deploy:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
