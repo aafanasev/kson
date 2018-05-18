@@ -140,7 +140,7 @@ class KsonProcessor : AbstractProcessor() {
                 getParameterizedTypeToken(initializer, it.type)
                 initializer.add(") as %T", type.javaToKotlinType())
             } else {
-                initializer.add("%L.getAdapter(%T::class.java)", GSON, it.type.javaToKotlinType())
+                initializer.add("%L.getAdapter(%T::class.javaObjectType)", GSON, it.type.javaToKotlinType())
             }
 
             typeAdapterBuilder.addProperty(
@@ -301,7 +301,7 @@ class KsonProcessor : AbstractProcessor() {
     private fun getTypeAdapterClassName(className: ClassName): String = "${className.simpleName()}TypeAdapter"
 
     private fun getParameterizedTypeToken(codeBlock: CodeBlock.Builder, type: ParameterizedTypeName, asType: Boolean = false) {
-        codeBlock.add("%T.getParameterized(%T::class.java", TypeToken::class, type.rawType.javaToKotlinType())
+        codeBlock.add("%T.getParameterized(%T::class.javaObjectType", TypeToken::class, type.rawType.javaToKotlinType())
 
         type.typeArguments.forEach {
             codeBlock.add(", ")
@@ -309,7 +309,7 @@ class KsonProcessor : AbstractProcessor() {
             if (it is ParameterizedTypeName) {
                 getParameterizedTypeToken(codeBlock, it, true)
             } else {
-                codeBlock.add("%T::class.java", it.javaToKotlinType())
+                codeBlock.add("%T::class.javaObjectType", it.javaToKotlinType())
             }
         }
 
