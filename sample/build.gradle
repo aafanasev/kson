@@ -10,4 +10,6 @@ dependencies {
 
     testCompile "junit:junit:4.12"
     testCompile "org.assertj:assertj-core:3.10.0"
+    testCompile "org.jetbrains.kotlin:kotlin-test"
+    kaptTest project(":kson-processor")
 }

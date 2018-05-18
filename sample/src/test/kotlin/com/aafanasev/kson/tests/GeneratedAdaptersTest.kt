@@ -7,6 +7,10 @@ import com.google.gson.annotations.SerializedName
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
+import kotlin.reflect.KClass
+import kotlin.test.assertFailsWith
+
+private const val REFLECTIVE_TYPE_ADAPTER_NAME = "Reflective"
 
 @Kson
 data class Entity(val id: Int, val name: String)
@@ -52,10 +56,12 @@ class GeneratedAdaptersTest {
 
         assertThat(entity.id).isEqualTo(1)
         assertThat(entity.name).isEqualTo("John")
+
+        val adapter = gson.getAdapterName(Entity::class)
+        assertThat(adapter).doesNotContain(REFLECTIVE_TYPE_ADAPTER_NAME)
     }
 
     @Test
-    @Throws(NullPointerException::class)
     fun `should throw NPE when property is not nullable`() {
         val json = """
             {
@@ -64,7 +70,9 @@ class GeneratedAdaptersTest {
             }
             """
 
-        gson.fromJson(json, Entity::class.java)
+        assertFailsWith<NullPointerException> {
+            gson.fromJson(json, Entity::class.java)
+        }
     }
 
     @Test
@@ -80,6 +88,9 @@ class GeneratedAdaptersTest {
 
         assertThat(entity.id).isNull()
         assertThat(entity.name).isNull()
+
+        val adapter = gson.getAdapterName(EntityWithNulls::class)
+        assertThat(adapter).doesNotContain(REFLECTIVE_TYPE_ADAPTER_NAME)
     }
 
     @Test
@@ -96,6 +107,9 @@ class GeneratedAdaptersTest {
         assertThat(entity.items[0]).isEqualTo("first")
         assertThat(entity.items[1]).isEqualTo("second")
         assertThat(entity.items[2]).isEqualTo("third")
+
+        val adapter = gson.getAdapterName(EntityWithList::class)
+        assertThat(adapter).doesNotContain(REFLECTIVE_TYPE_ADAPTER_NAME)
     }
 
     @Test
@@ -116,6 +130,9 @@ class GeneratedAdaptersTest {
         assertThat(entity.items["first"]).isEqualTo(1)
         assertThat(entity.items["second"]).isEqualTo(2)
         assertThat(entity.items["third"]).isEqualTo(3)
+
+        val adapter = gson.getAdapterName(EntityWithMap::class)
+        assertThat(adapter).doesNotContain(REFLECTIVE_TYPE_ADAPTER_NAME)
     }
 
     @Test
@@ -139,6 +156,9 @@ class GeneratedAdaptersTest {
         assertThat(entity.entity.name).isEqualTo("John")
         assertThat(entity.entityWithNulls.id).isEqualTo(2)
         assertThat(entity.entityWithNulls.name).isEqualTo("Wick")
+
+        val adapter = gson.getAdapterName(EntityWithEntity::class)
+        assertThat(adapter).doesNotContain(REFLECTIVE_TYPE_ADAPTER_NAME)
     }
 
     @Test
@@ -158,6 +178,11 @@ class GeneratedAdaptersTest {
         val generatedJson = gson.toJson(entity)
 
         assertThat(generatedJson).isEqualToIgnoringWhitespace(json)
+
+        val adapter = gson.getAdapterName(EntityWithCustomKeys::class)
+        assertThat(adapter).doesNotContain(REFLECTIVE_TYPE_ADAPTER_NAME)
     }
+
+    private fun Gson.getAdapterName(cls: KClass<*>) = this.getAdapter(cls::class.java)::class.java.simpleName
 
 }
