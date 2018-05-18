@@ -52,5 +52,5 @@ jobs:
               - ~/.gradle
             key: v1-dependencies-{{ checksum "build.gradle" }}
 
-        - run: gradle :kson-processor:bintrayUpload -PbintrayUser=$BINTRAY_USER -PbintrayApiKey=$BINTRAY_API_KEY
+        - run: gradle :kson-annotation:bintrayUpload :kson-processor:bintrayUpload -PbintrayUser=$BINTRAY_USER -PbintrayApiKey=$BINTRAY_API_KEY
 
