@@ -3,8 +3,11 @@ apply plugin: 'kotlin-kapt'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7"
-    compile 'com.google.code.gson:gson:2.8.2'
+    compile "com.google.code.gson:gson:2.8.2"
 
     compile project(":kson-annotation")
     kapt project(":kson-processor")
+
+    testCompile "junit:junit:4.12"
+    testCompile "org.assertj:assertj-core:3.10.0"
 }
