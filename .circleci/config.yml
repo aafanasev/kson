@@ -25,7 +25,7 @@ jobs:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
         
-      - run: gradle build
+      - run: gradle test
 
   deploy:
       docker:
