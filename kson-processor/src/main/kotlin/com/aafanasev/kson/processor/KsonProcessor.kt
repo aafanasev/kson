@@ -136,8 +136,9 @@ class KsonProcessor : AbstractProcessor() {
             val type = ParameterizedTypeName.get(TypeAdapter::class.asClassName(), it.type)
 
             if (it.type is ParameterizedTypeName) {
+                initializer.add("%L.getAdapter(", GSON)
                 getParameterizedTypeToken(initializer, it.type)
-                initializer.add(" as %T", type.javaToKotlinType())
+                initializer.add(") as %T", type.javaToKotlinType())
             } else {
                 initializer.add("%L.getAdapter(%T::class.java)", GSON, it.type.javaToKotlinType())
             }
