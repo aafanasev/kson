@@ -1,6 +1,8 @@
 # KSON
 
-[ ![Download](https://api.bintray.com/packages/aafanasev/maven/kson-processor/images/download.svg) ](https://bintray.com/aafanasev/maven/kson-processor/_latestVersion) [![CircleCI](https://circleci.com/gh/aafanasev/kson.svg?style=shield)](https://circleci.com/gh/aafanasev/kson)
+[![Download](https://api.bintray.com/packages/aafanasev/maven/kson-processor/images/download.svg)](https://bintray.com/aafanasev/maven/kson-processor/_latestVersion) 
+[![CircleCI](https://circleci.com/gh/aafanasev/kson.svg?style=shield)](https://circleci.com/gh/aafanasev/kson) 
+[![Android Arsenal]( https://img.shields.io/badge/Android%20Arsenal-KSON-green.svg?style=flat )](https://android-arsenal.com/details/1/6949)
 
 An annotation processor generates GSON TypeAdapter from Kotlin Data Classes
 
