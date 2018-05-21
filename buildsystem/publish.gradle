@@ -1,10 +1,16 @@
 apply plugin: "maven-publish"
 apply plugin: "com.jfrog.bintray"
 
+task sourcesJar(type: Jar) {
+    classifier = "sources"
+    from sourceSets.main.allSource
+}
+
 publishing {
     publications {
         Kson(MavenPublication) {
             from components.java
+            artifact sourcesJar
             groupId kson.group
             artifactId libName
             version kson.version
