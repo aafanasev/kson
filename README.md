@@ -74,9 +74,17 @@ data class UnsupportedDataClass(
 )
 ```
 
-## Install
+## Installation
+
+To add KSON to your project, add the following to your module's `build.gradle`:
 
 ```groovy
-compile 'com.aafanasev:kson-annotation:<version>'   
-kapt 'com.aafanasev:kson-processor:<version>'
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'com.aafanasev:kson-annotation:<version>'   
+    kapt 'com.aafanasev:kson-processor:<version>'
+}
 ```
