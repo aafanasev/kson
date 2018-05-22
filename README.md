@@ -77,14 +77,6 @@ data class UnsupportedDataClass(
 ## Install
 
 ```groovy
-// add repository
-repositories {
-    maven {
-        url 'https://dl.bintray.com/aafanasev/maven'
-    }
-}
-
-// add dependency
 compile 'com.aafanasev:kson-annotation:<version>'   
 kapt 'com.aafanasev:kson-processor:<version>'
 ```
