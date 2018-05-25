@@ -1,5 +1,8 @@
 apply plugin: 'kotlin'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'application'
+
+mainClassName = "com.aafanasev.kson.benchmark.Runner"
 
 sourceSets.main.java.srcDirs += "$buildDir/generated/source/kaptKotlin/"
 

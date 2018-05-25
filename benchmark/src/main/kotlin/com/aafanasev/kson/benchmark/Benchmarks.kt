@@ -1,3 +1,5 @@
+@file:JvmName("Runner")
+
 package com.aafanasev.kson.benchmark
 
 import org.openjdk.jmh.annotations.Benchmark
