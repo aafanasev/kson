@@ -8,7 +8,7 @@ An annotation processor generates Gson TypeAdapter from Kotlin Data Classes
 
 ## Motivation
 
-By default, Gson uses reflection to read/write data from JSON. It's not only slow, also it breaks Kotlin's null-safe types. 
+By default, Gson uses reflection to read/write data from JSON. It's not only slow ([benchmarks](/benchmark)), also it breaks Kotlin's null-safe types. 
 
 For example:
 ```kotlin
