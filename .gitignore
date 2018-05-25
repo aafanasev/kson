@@ -14,6 +14,8 @@ Thumbs.db
 /kson-processor/out
 /sample/build
 /sample/out
+/benchmark/build
+/benchmark/out
 
 # IDE files
 /.idea
