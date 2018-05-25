@@ -13,7 +13,7 @@ open class GsonState {
 
     lateinit var gson: Gson
 
-    @Setup(Level.Invocation)
+    @Setup(Level.Trial)
     fun setUp() {
         gson = GsonBuilder().create()
     }
@@ -24,7 +24,7 @@ open class GsonWithKsonState {
 
     lateinit var gson: Gson
 
-    @Setup(Level.Invocation)
+    @Setup(Level.Trial)
     fun setUp() {
         gson = GsonBuilder()
                 .registerTypeAdapterFactory(KsonTypeAdapterFactory())
@@ -37,7 +37,7 @@ open class JsonState {
 
     lateinit var json: String
 
-    @Setup(Level.Invocation)
+    @Setup(Level.Trial)
     fun setUp() {
         json = javaClass.getResource("/data.json").readText()
     }
