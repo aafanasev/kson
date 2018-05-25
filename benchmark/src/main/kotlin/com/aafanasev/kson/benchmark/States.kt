@@ -9,7 +9,7 @@ import org.openjdk.jmh.annotations.Setup
 import org.openjdk.jmh.annotations.State
 
 @State(Scope.Benchmark)
-class GsonState {
+open class GsonState {
 
     lateinit var gson: Gson
 
@@ -20,7 +20,7 @@ class GsonState {
 }
 
 @State(Scope.Benchmark)
-class GsonWithKsonState {
+open class GsonWithKsonState {
 
     lateinit var gson: Gson
 
@@ -33,7 +33,7 @@ class GsonWithKsonState {
 }
 
 @State(Scope.Benchmark)
-class JsonState {
+open class JsonState {
 
     lateinit var json: String
 
