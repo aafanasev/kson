@@ -145,7 +145,7 @@ class KsonProcessor : AbstractProcessor() {
 
             typeAdapterBuilder.addProperty(
                     PropertySpec.builder(it.adapterName, type.javaToKotlinType(), KModifier.PRIVATE)
-                            .delegate("lazy { %L }", initializer.build())
+                            .delegate("lazy(LazyThreadSafetyMode.NONE) { %L }", initializer.build())
                             .build()
             )
         }
