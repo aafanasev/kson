@@ -13,7 +13,7 @@ internal data class KProperty(
     val adapterName = typeToAdapterName(type)
 }
 
-internal fun typeToAdapterName(type: TypeName): String {
+private fun typeToAdapterName(type: TypeName): String {
     val names = mutableListOf<String>()
 
     if (type is ParameterizedTypeName) {
