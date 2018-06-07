@@ -131,24 +131,28 @@ class KsonProcessor : AbstractProcessor() {
                 )
 
         // init properties
-        properties.forEach {
-            val initializer = CodeBlock.builder()
-            val type = ParameterizedTypeName.get(TypeAdapter::class.asClassName(), it.type)
+        properties
+                .distinctBy {
+                    it.adapterName
+                }
+                .forEach {
+                    val initializer = CodeBlock.builder()
+                    val type = ParameterizedTypeName.get(TypeAdapter::class.asClassName(), it.type)
 
-            if (it.type is ParameterizedTypeName) {
-                initializer.add("%L.getAdapter(", GSON)
-                getParameterizedTypeToken(initializer, it.type)
-                initializer.add(") as %T", type.javaToKotlinType())
-            } else {
-                initializer.add("%L.getAdapter(%T::class.javaObjectType)", GSON, it.type.javaToKotlinType())
-            }
+                    if (it.type is ParameterizedTypeName) {
+                        initializer.add("%L.getAdapter(", GSON)
+                        getParameterizedTypeToken(initializer, it.type)
+                        initializer.add(") as %T", type.javaToKotlinType())
+                    } else {
+                        initializer.add("%L.getAdapter(%T::class.javaObjectType)", GSON, it.type.javaToKotlinType())
+                    }
 
-            typeAdapterBuilder.addProperty(
-                    PropertySpec.builder(it.adapterName, type.javaToKotlinType(), KModifier.PRIVATE)
-                            .delegate("lazy(LazyThreadSafetyMode.NONE) { %L }", initializer.build())
-                            .build()
-            )
-        }
+                    typeAdapterBuilder.addProperty(
+                            PropertySpec.builder(it.adapterName, type.javaToKotlinType(), KModifier.PRIVATE)
+                                    .delegate("lazy(LazyThreadSafetyMode.NONE) { %L }", initializer.build())
+                                    .build()
+                    )
+                }
 
         // add write() function
         typeAdapterBuilder.addFunction(generateWriteFunction(clazz, properties))

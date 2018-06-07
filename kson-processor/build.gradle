@@ -16,4 +16,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.2'
 
     compile project(':kson-annotation')
+
+    testCompile "junit:junit:4.12"
+    testCompile "org.assertj:assertj-core:3.10.0"
+    testCompile "org.jetbrains.kotlin:kotlin-test"
 }
