@@ -1,5 +1,5 @@
-[![Download](https://api.bintray.com/packages/aafanasev/maven/kson-processor/images/download.svg)](https://bintray.com/aafanasev/maven/kson-processor/_latestVersion) 
-[![CircleCI](https://circleci.com/gh/aafanasev/kson.svg?style=shield)](https://circleci.com/gh/aafanasev/kson) 
+[![Download](https://api.bintray.com/packages/aafanasev/maven/kson-processor/images/download.svg)](https://bintray.com/aafanasev/maven/kson-processor/_latestVersion)
+[![CircleCI](https://circleci.com/gh/aafanasev/kson.svg?style=shield)](https://circleci.com/gh/aafanasev/kson)
 [![Android Arsenal]( https://img.shields.io/badge/Android%20Arsenal-KSON-green.svg?style=flat )](https://android-arsenal.com/details/1/6949)
 
 ![Kson - kotlin type adapter generator](kson-logo.png)
@@ -8,7 +8,7 @@ An annotation processor generates Gson TypeAdapter from Kotlin Data Classes
 
 ## Motivation
 
-By default, Gson uses reflection to read/write data from JSON. It's not only slow ([benchmarks](/benchmark)), also it breaks Kotlin's null-safe types. 
+By default, Gson uses reflection to read/write data from JSON. It's not only slow ([benchmarks](/benchmark)), also it breaks Kotlin's null-safe types.
 
 For example:
 ```kotlin
@@ -34,7 +34,7 @@ Add `@Kson` annotation to your data classes
 ```kotlin
 @Kson
 data class RoleEntity(
-    val id: Int, 
+    val id: Int,
     @SerializedName("roleName") val name: String
 )
 
@@ -45,7 +45,7 @@ data class UserEntity(
     val roles: List<RoleEntity>
 )
 
-// etc
+// etc.
 ```
 
 Register generated TypeAdapterFactory
