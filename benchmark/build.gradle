@@ -11,7 +11,7 @@ kapt {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile "com.google.code.gson:gson:2.8.2"
 
     compile project(":kson-annotation")
