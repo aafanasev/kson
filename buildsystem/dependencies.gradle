@@ -1,5 +1,5 @@
 ext.kson = [
-        group  : "com.aafanasev",
+        group  : "dev.afanasev",
         name   : "kson",
-        version: "0.4"
+        version: "0.5"
 ]

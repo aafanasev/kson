@@ -51,7 +51,7 @@ data class UserEntity(
 Register generated TypeAdapterFactory
 
 ```kotlin
-import com.aafanasev.kson.generated.KsonTypeAdapterFactory // generated factory
+import dev.afanasev.kson.generated.KsonTypeAdapterFactory // generated factory
 
 val gson = GsonBuilder()
     .registerTypeAdapterFactory(KsonTypeAdapterFactory())
@@ -84,7 +84,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.aafanasev:kson-annotation:<version>'   
-    kapt 'com.aafanasev:kson-processor:<version>'
+    compile 'dev.afanasev:kson-annotation:<version>'   
+    kapt 'dev.afanasev:kson-processor:<version>'
 }
 ```
