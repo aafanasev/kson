@@ -1,6 +1,5 @@
 package dev.afanasev.kson.processor
 
-import dev.afanasev.kson.annotation.Kson
 import com.google.gson.Gson
 import com.google.gson.TypeAdapter
 import com.google.gson.TypeAdapterFactory
@@ -9,7 +8,20 @@ import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
+import dev.afanasev.kson.annotation.Kson
 import org.jetbrains.annotations.Nullable
 import java.io.File
 import javax.annotation.Generated
@@ -68,17 +80,24 @@ class KsonProcessor : AbstractProcessor() {
     private fun generate(roundEnv: RoundEnvironment) {
         log("generating...")
 
-        val fileBuilder = FileSpec.builder(PACKAGE, FILENAME)
+        val outputDir = processingEnv.options["kapt.kotlin.generated"]
 
-        val classes = roundEnv.getElementsAnnotatedWith(Kson::class.java)
-                .asSequence()
+        roundEnv.getElementsAnnotatedWith(Kson::class.java)
                 .filter { it.kind == ElementKind.CLASS }
                 .filter { elementUtils.getPackageOf(it).isUnnamed.not() }
                 .map { it as TypeElement }
-                .onEach { fileBuilder.addType(generateTypeAdapter(it)) }
-                .map { it.asClassName() }
-                .toList()
+                .onEach {
+                    val className = it.asClassName()
 
+                    val fileName = getTypeAdapterClassName(className) + ".kt"
+                    val fileBuilder = FileSpec.builder(className.packageName(), fileName).apply {
+                        addType(generateTypeAdapter(it))
+                    }
+
+                    File(outputDir, fileName).writeText(fileBuilder.build().toString())
+                }
+
+        /*
         if (classes.isNotEmpty()) {
             fileBuilder.addType(generateTypeAdapterFactory(classes))
 
@@ -90,6 +109,7 @@ class KsonProcessor : AbstractProcessor() {
                 writeText(file.toString())
             }
         }
+        */
     }
 
     /**
