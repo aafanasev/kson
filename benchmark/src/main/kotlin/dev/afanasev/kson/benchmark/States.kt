@@ -1,6 +1,5 @@
 package dev.afanasev.kson.benchmark
 
-import dev.afanasev.kson.generated.KsonTypeAdapterFactory
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import org.openjdk.jmh.annotations.Level
@@ -27,7 +26,9 @@ open class GsonWithKsonState {
     @Setup(Level.Trial)
     fun setUp() {
         gson = GsonBuilder()
-                .registerTypeAdapterFactory(KsonTypeAdapterFactory())
+                .registerTypeAdapter(Employee::class.java, EmployeeTypeAdapter::class.java)
+                .registerTypeAdapter(Entity::class.java, EntityTypeAdapter::class.java)
+                .registerTypeAdapter(Friend::class.java, FriendTypeAdapter::class.java)
                 .create()
     }
 }
