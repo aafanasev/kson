@@ -21,28 +21,22 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
+import dev.afanasev.kson.annotation.KsonFactory
 import dev.afanasev.kson.annotation.Kson
 import org.jetbrains.annotations.Nullable
 import java.io.File
 import javax.annotation.Generated
 import javax.annotation.processing.AbstractProcessor
-import javax.annotation.processing.Messager
-import javax.annotation.processing.ProcessingEnvironment
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
-import javax.lang.model.util.Elements
 import javax.tools.Diagnostic
 import kotlin.reflect.jvm.internal.impl.name.FqName
 import kotlin.reflect.jvm.internal.impl.platform.JavaToKotlinClassMap
 
-private const val PACKAGE = "dev.afanasev.kson.generated"
-private const val FILENAME = "KsonTypeAdapters.kt"
-
 private const val REPOSITORY_URL = "https://github.com/aafanasev/kson"
-private const val FACTORY_CLASS_NAME = "KsonTypeAdapterFactory"
 
 // variables
 private const val GSON = "gson"
@@ -56,21 +50,15 @@ private const val TYPE = "type"
  */
 class KsonProcessor : AbstractProcessor() {
 
-    private lateinit var messager: Messager
-    private lateinit var elementUtils: Elements
-
-    override fun init(processingEnv: ProcessingEnvironment) {
-        super.init(processingEnv)
-        messager = processingEnv.messager
-        elementUtils = processingEnv.elementUtils
-    }
-
-    override fun getSupportedAnnotationTypes() = setOf(Kson::class.java.canonicalName)
+    override fun getSupportedAnnotationTypes() = setOf(
+            Kson::class.java.name,
+            KsonFactory::class.java.name
+    )
 
     override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latestSupported()
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        if (!roundEnv.processingOver()) {
+        if (!roundEnv.errorRaised() && !roundEnv.processingOver()) {
             generate(roundEnv)
         }
 
@@ -80,36 +68,42 @@ class KsonProcessor : AbstractProcessor() {
     private fun generate(roundEnv: RoundEnvironment) {
         log("generating...")
 
-        val outputDir = processingEnv.options["kapt.kotlin.generated"]
-
-        roundEnv.getElementsAnnotatedWith(Kson::class.java)
+        val classes = roundEnv.getElementsAnnotatedWith(Kson::class.java)
+                .asSequence()
                 .filter { it.kind == ElementKind.CLASS }
-                .filter { elementUtils.getPackageOf(it).isUnnamed.not() }
+                .filter { processingEnv.elementUtils.getPackageOf(it).isUnnamed.not() }
                 .map { it as TypeElement }
-                .onEach {
-                    val className = it.asClassName()
+                .toList()
 
-                    val fileName = getTypeAdapterClassName(className) + ".kt"
-                    val fileBuilder = FileSpec.builder(className.packageName(), fileName).apply {
-                        addType(generateTypeAdapter(it))
-                    }
-
-                    File(outputDir, fileName).writeText(fileBuilder.build().toString())
-                }
-
-        /*
         if (classes.isNotEmpty()) {
-            fileBuilder.addType(generateTypeAdapterFactory(classes))
+            val outputDir = processingEnv.options["kapt.kotlin.generated"]
 
-            val dir = processingEnv.options["kapt.kotlin.generated"]
-            val file = fileBuilder.build()
+            classes.onEach {
+                val adapterClass = it.asClassName()
+                val adapterSpec = generateTypeAdapter(it)
 
-            File(dir, file.name).apply {
-                parentFile.mkdirs()
-                writeText(file.toString())
+                FileSpec.get(adapterClass.packageName(), adapterSpec).writeTo(File(outputDir))
+            }
+
+            val factories = roundEnv.getElementsAnnotatedWith(KsonFactory::class.java)
+                    .filter { it.kind == ElementKind.CLASS }
+                    .map { (it as TypeElement).asClassName() }
+
+            when (factories.size) {
+                0 -> log("Consider using ${KsonFactory::class.qualifiedName} annotation to generate"
+                        + " a factory class for all type adapters", Diagnostic.Kind.WARNING)
+                1 -> {
+                    val factoryClass = factories[0]
+                    val factorySpec = generateTypeAdapterFactory(
+                            factoryClassName = "Kson" + factoryClass.simpleName(),
+                            typeAdapters = classes.map { it.asClassName() }
+                    )
+
+                    FileSpec.get(factoryClass.packageName(), factorySpec).writeTo(File(outputDir))
+                }
+                else -> error("Only one class can be annotated with ${KsonFactory::class.qualifiedName}")
             }
         }
-        */
     }
 
     /**
@@ -272,11 +266,11 @@ class KsonProcessor : AbstractProcessor() {
     /**
      * Generates a Gson [TypeAdapterFactory]
      */
-    private fun generateTypeAdapterFactory(typeAdapters: List<ClassName>): TypeSpec {
+    private fun generateTypeAdapterFactory(factoryClassName: String, typeAdapters: List<ClassName>): TypeSpec {
         log("generating a factory...")
 
         val factoryBuilder = TypeSpec
-                .classBuilder(FACTORY_CLASS_NAME)
+                .classBuilder(factoryClassName)
                 .addAnnotation(getGeneratedAnnotation())
                 .addSuperinterface(TypeAdapterFactory::class)
 
@@ -314,7 +308,7 @@ class KsonProcessor : AbstractProcessor() {
     }
 
     private fun log(msg: String, kind: Diagnostic.Kind = Diagnostic.Kind.NOTE) {
-        messager.printMessage(kind, "${javaClass.name}: $msg")
+        processingEnv.messager.printMessage(kind, "${javaClass.name}: $msg")
     }
 
     private fun getGeneratedAnnotation() = AnnotationSpec.builder(Generated::class.java)
