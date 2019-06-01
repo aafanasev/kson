@@ -21,8 +21,8 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
-import dev.afanasev.kson.annotation.KsonFactory
 import dev.afanasev.kson.annotation.Kson
+import dev.afanasev.kson.annotation.KsonFactory
 import org.jetbrains.annotations.Nullable
 import java.io.File
 import javax.annotation.Generated
@@ -96,7 +96,7 @@ class KsonProcessor : AbstractProcessor() {
                     val factoryClass = factories[0]
                     val factorySpec = generateTypeAdapterFactory(
                             factoryClassName = "Kson" + factoryClass.simpleName(),
-                            typeAdapters = classes.map { it.asClassName() }
+                            classes = classes.map { it.asClassName() }
                     )
 
                     FileSpec.get(factoryClass.packageName(), factorySpec).writeTo(File(outputDir))
@@ -266,7 +266,7 @@ class KsonProcessor : AbstractProcessor() {
     /**
      * Generates a Gson [TypeAdapterFactory]
      */
-    private fun generateTypeAdapterFactory(factoryClassName: String, typeAdapters: List<ClassName>): TypeSpec {
+    private fun generateTypeAdapterFactory(factoryClassName: String, classes: List<ClassName>): TypeSpec {
         log("generating a factory...")
 
         val factoryBuilder = TypeSpec
@@ -293,8 +293,9 @@ class KsonProcessor : AbstractProcessor() {
 
         createMethod.addStatement("val %L = when {%>", resultVarName)
 
-        typeAdapters.forEach {
-            createMethod.addStatement("%T::class.java.isAssignableFrom(%L.rawType) -> %L(%L)", it, TYPE, getTypeAdapterClassName(it), GSON)
+        classes.forEach {
+            val adapter = ClassName(it.packageName(), getTypeAdapterClassName(it))
+            createMethod.addStatement("%T::class.java.isAssignableFrom(%L.rawType) -> %T(%L)", it, TYPE, adapter, GSON)
         }
 
         createMethod.addStatement("else -> null")
