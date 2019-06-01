@@ -1,31 +1,44 @@
 package dev.afanasev.kson.sample
 
-import dev.afanasev.kson.annotation.Kson
 import com.google.gson.GsonBuilder
-import com.google.gson.annotations.SerializedName
-import dev.afanasev.kson.generated.KsonTypeAdapterFactory // generated factory
+import dev.afanasev.kson.annotation.Kson
+import dev.afanasev.kson.sample.inner.TypeAdapterProvider
+
+data class TestEntity(
+        val id: Int,
+        val title: String
+)
 
 @Kson
-data class TestEntity1(val id: Int,
-                       val title: String)
-
-@Kson
-data class TestEntity2(@SerializedName("idVal") val id: Int,
-                       val title: String?,
-                       val list: List<String>,
-                       val map: Map<String, List<Double>>?)
+data class KsonEntity(
+        val id: Int,
+        val title: String
+)
 
 const val JSON = """{
     "id": 42,
-    "title": "Hello world"
+    "title": null
     }"""
 
 fun main(args: Array<String>) {
     val gson = GsonBuilder()
-            .registerTypeAdapterFactory(KsonTypeAdapterFactory())
+            .registerTypeAdapterFactory(TypeAdapterProvider.get())
             .create()
 
-    val dto: TestEntity1 = gson.fromJson(JSON, TestEntity1::class.java)
+    // Doesn't throw any exception when id = null
+    val dangerEntity = gson.fromJson(JSON, TestEntity::class.java)
 
-    println(dto)
+    try {
+        // Throws exception in runtime
+        dangerEntity.title.length
+    } catch (e: Exception) {
+        println("Not safe runtime exception")
+    }
+
+    // Throws NPE immediately
+    try {
+        gson.fromJson(JSON, KsonEntity::class.java)
+    } catch (e: Exception) {
+        println("Caught exception during JSON parsing")
+    }
 }
