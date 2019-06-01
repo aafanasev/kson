@@ -29,7 +29,7 @@ In order to avoid reflection, need to create a custom TypeAdapter for every enti
 
 ## Usage
 
-Add `@Kson` annotation to your data classes
+Add `@Kson` annotation to your data classes and Kson will automatically generate `<class name>TypeAdapter.kt` files.
 
 ```kotlin
 @Kson
@@ -48,13 +48,18 @@ data class UserEntity(
 // etc
 ```
 
-Register generated TypeAdapterFactory
+Also you can use `@KsonFactory` annotation to generate TypeAdapterFactory class
 
 ```kotlin
-import dev.afanasev.kson.generated.KsonTypeAdapterFactory // generated factory
+@KsonFactory
+object FactoryProvider {
+
+    get() = KsonFactoryProvider()
+
+}
 
 val gson = GsonBuilder()
-    .registerTypeAdapterFactory(KsonTypeAdapterFactory())
+    .registerTypeAdapterFactory(FactoryProvider.get())
     .create()
 
 // gson.fromJson(...)
