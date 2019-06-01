@@ -13,3 +13,9 @@ dependencies {
     testCompile "org.jetbrains.kotlin:kotlin-test"
     kaptTest project(":kson-processor")
 }
+
+// Optional, let IDE know generated classes
+sourceSets {
+    main.java.srcDirs += "build/generated/source/kaptKotlin/main"
+    test.java.srcDirs += "build/generated/source/kaptKotlin/test"
+}
