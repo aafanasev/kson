@@ -54,14 +54,14 @@ jobs:
 
       - run: ./gradlew :kson-annotation:bintrayUpload :kson-processor:bintrayUpload -PbintrayUser=$BINTRAY_USER -PbintrayApiKey=$BINTRAY_API_KEY
 
- workflows:
-   version: 2
-   build-and-deploy:
-     jobs:
-       - build
-       - deploy:
-           requires:
-             - build
-           filters:
-             branches:
-               only: master
+# workflows:
+#   version: 2
+#   build-and-deploy:
+#     jobs:
+#       - build
+#       - deploy:
+#           requires:
+#             - build
+#           filters:
+#             branches:
+#               only: master
