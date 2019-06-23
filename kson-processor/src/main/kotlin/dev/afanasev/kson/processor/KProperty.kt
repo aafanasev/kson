@@ -19,7 +19,7 @@ internal fun typeToAdapterName(type: TypeName): String {
     if (type is ParameterizedTypeName) {
         names.addAll(type.getClassNamesRecursively())
     } else {
-        names.add((type as ClassName).simpleName())
+        names.add((type as ClassName).simpleName)
     }
 
     names.add("adapter")
@@ -29,13 +29,13 @@ internal fun typeToAdapterName(type: TypeName): String {
 
 private fun ParameterizedTypeName.getClassNamesRecursively(): List<String> {
     val names = mutableListOf<String>()
-    names.add(rawType.simpleName())
+    names.add(rawType.simpleName)
 
     typeArguments.forEach {
         if (it is ParameterizedTypeName) {
             names.addAll(it.getClassNamesRecursively())
         } else {
-            names.add((it as ClassName).simpleName())
+            names.add((it as ClassName).simpleName)
         }
     }
 
