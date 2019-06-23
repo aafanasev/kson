@@ -1,358 +1,56 @@
 package dev.afanasev.kson.processor
 
-import com.google.gson.Gson
-import com.google.gson.TypeAdapter
-import com.google.gson.TypeAdapterFactory
-import com.google.gson.annotations.SerializedName
-import com.google.gson.reflect.TypeToken
-import com.google.gson.stream.JsonReader
-import com.google.gson.stream.JsonToken
-import com.google.gson.stream.JsonWriter
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterizedTypeName
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.asClassName
-import com.squareup.kotlinpoet.asTypeName
 import dev.afanasev.kson.annotation.Kson
-import dev.afanasev.kson.annotation.KsonFactory
-import org.jetbrains.annotations.Nullable
-import java.io.File
 import javax.annotation.Generated
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
-import javax.lang.model.element.VariableElement
 import javax.tools.Diagnostic
-import kotlin.reflect.jvm.internal.impl.name.FqName
-import kotlin.reflect.jvm.internal.impl.platform.JavaToKotlinClassMap
 
 private const val REPOSITORY_URL = "https://github.com/aafanasev/kson"
 
 // variables
-private const val GSON = "gson"
-private const val WRITER = "writer"
-private const val READER = "reader"
-private const val OBJECT = "obj"
-private const val TYPE = "type"
+internal const val GSON = "gson"
+internal const val WRITER = "writer"
+internal const val READER = "reader"
+internal const val OBJECT = "obj"
+internal const val TYPE = "type"
 
 /**
- * Generates a Gson [TypeAdapter] and [TypeAdapterFactory] for all [Kson] annotated classes.
+ * Base class for other Kson processors.
  */
-class KsonProcessor : AbstractProcessor() {
-
-    override fun getSupportedAnnotationTypes() = setOf(
-            Kson::class.java.name,
-            KsonFactory::class.java.name
-    )
+abstract class KsonProcessor : AbstractProcessor() {
 
     override fun getSupportedSourceVersion(): SourceVersion = SourceVersion.latestSupported()
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        if (!roundEnv.errorRaised() && !roundEnv.processingOver()) {
-            generate(roundEnv)
-        }
-
-        return true
+        generate(roundEnv)
+        return false
     }
 
-    private fun generate(roundEnv: RoundEnvironment) {
-        log("generating...")
+    protected abstract fun generate(roundEnv: RoundEnvironment)
 
-        val classes = roundEnv.getElementsAnnotatedWith(Kson::class.java)
-                .asSequence()
-                .filter { it.kind == ElementKind.CLASS }
-                .filter { processingEnv.elementUtils.getPackageOf(it).isUnnamed.not() }
-                .map { it as TypeElement }
-                .toList()
-
-        if (classes.isNotEmpty()) {
-            val outputDir = processingEnv.options["kapt.kotlin.generated"]
-
-            classes.onEach {
-                val adapterClass = it.asClassName()
-                val adapterSpec = generateTypeAdapter(it)
-
-                FileSpec.get(adapterClass.packageName(), adapterSpec).writeTo(File(outputDir))
-            }
-
-            val factories = roundEnv.getElementsAnnotatedWith(KsonFactory::class.java)
-                    .filter { it.kind == ElementKind.CLASS }
-                    .map { (it as TypeElement).asClassName() }
-
-            when (factories.size) {
-                0 -> log("Consider using ${KsonFactory::class.qualifiedName} annotation to generate"
-                        + " a factory class for all type adapters", Diagnostic.Kind.WARNING)
-                1 -> {
-                    val factoryClass = factories[0]
-                    val factorySpec = generateTypeAdapterFactory(
-                            factoryClassName = "Kson" + factoryClass.simpleName(),
-                            classes = classes.map { it.asClassName() }
-                    )
-
-                    FileSpec.get(factoryClass.packageName(), factorySpec).writeTo(File(outputDir))
-                }
-                else -> error("Only one class can be annotated with ${KsonFactory::class.qualifiedName}")
-            }
-        }
-    }
-
-    /**
-     * Generates a Gson [TypeAdapter]
-     */
-    private fun generateTypeAdapter(clazz: TypeElement): TypeSpec {
-        log("generating a type adapter for ${clazz.simpleName}...")
-
-        val properties = clazz.enclosedElements
-                .asSequence()
-                .filter { it.kind == ElementKind.FIELD }
-                .map { it as VariableElement }
-                .map {
-                    val key = it.getAnnotation(SerializedName::class.java)?.value ?: it.simpleName
-                    val name = it.simpleName
-                    val type = it.asType().asTypeName()
-                    val nullable = it.getAnnotation(Nullable::class.java) != null
-
-                    KProperty(key.toString(), name.toString(), type, nullable)
-                }
-                .toList()
-
-        val typeAdapterBuilder = TypeSpec
-                .classBuilder(getTypeAdapterClassName(clazz.asClassName()))
-                .addAnnotation(getGeneratedAnnotation())
-                .superclass(
-                        ParameterizedTypeName.get(TypeAdapter::class.asTypeName(), clazz.asClassName())
-                )
-                .primaryConstructor(
-                        FunSpec.constructorBuilder()
-                                .addParameter(GSON, Gson::class)
-                                .build()
-                )
-                .addProperty(
-                        PropertySpec.builder(GSON, Gson::class)
-                                .initializer(GSON)
-                                .addModifiers(KModifier.PRIVATE)
-                                .build()
-                )
-
-        // init properties
-        properties
-                .distinctBy {
-                    it.adapterName
-                }
-                .forEach {
-                    val initializer = CodeBlock.builder()
-                    val type = ParameterizedTypeName.get(TypeAdapter::class.asClassName(), it.type)
-
-                    if (it.type is ParameterizedTypeName) {
-                        initializer.add("%L.getAdapter(", GSON)
-                        getParameterizedTypeToken(initializer, it.type)
-                        initializer.add(") as %T", type.javaToKotlinType())
-                    } else {
-                        initializer.add("%L.getAdapter(%T::class.javaObjectType)", GSON, it.type.javaToKotlinType())
-                    }
-
-                    typeAdapterBuilder.addProperty(
-                            PropertySpec.builder(it.adapterName, type.javaToKotlinType(), KModifier.PRIVATE)
-                                    .delegate("lazy(LazyThreadSafetyMode.NONE) { %L }", initializer.build())
-                                    .build()
-                    )
-                }
-
-        // add write() function
-        typeAdapterBuilder.addFunction(generateWriteFunction(clazz, properties))
-
-        // add read() function
-        typeAdapterBuilder.addFunction(generateReadFunction(clazz, properties))
-
-        return typeAdapterBuilder.build()
-    }
-
-    /**
-     * Generates write() function
-     */
-    private fun generateWriteFunction(clazz: TypeElement, properties: List<KProperty>): FunSpec {
-        val writeFunc = FunSpec.builder("write")
-                .addModifiers(KModifier.OVERRIDE)
-                .addParameter(WRITER, JsonWriter::class)
-                .addParameter(OBJECT, clazz.asClassName().asNullable())
-
-        //region if
-        writeFunc.beginControlFlow("if (%L == null)", OBJECT)
-        writeFunc.addStatement("%L.nullValue()", WRITER)
-        writeFunc.addStatement("return")
-        writeFunc.endControlFlow()
-        //endregion if
-
-        writeFunc.addStatement("%L.beginObject()", WRITER)
-        properties.forEach {
-            writeFunc.addStatement("%L.name(%S)", WRITER, it.key)
-            writeFunc.addStatement("%L.write(%L, %L.%L)", it.adapterName, WRITER, OBJECT, it.name)
-        }
-        writeFunc.addStatement("%L.endObject()", WRITER)
-
-        return writeFunc.build()
-    }
-
-    /**
-     * Generates read() function
-     */
-    private fun generateReadFunction(clazz: TypeElement, properties: List<KProperty>): FunSpec {
-        val readFunc = FunSpec.builder("read")
-                .addModifiers(KModifier.OVERRIDE)
-                .addParameter(READER, JsonReader::class.java)
-                .returns(clazz.asClassName().asNullable())
-
-        readFunc.beginControlFlow("if (%L.peek() == %T.NULL)", READER, JsonToken::class)
-        readFunc.addStatement("%L.nextNull()", READER)
-        readFunc.addStatement("return null")
-        readFunc.endControlFlow()
-
-        properties.forEach {
-            readFunc.addStatement("var ${it.key}: %L = null", it.type.javaToKotlinType().asNullable())
-        }
-
-        readFunc.addStatement("%L.beginObject()", READER)
-
-        //region while
-        readFunc.beginControlFlow("while (%L.hasNext())", READER)
-
-        //region if
-        readFunc.beginControlFlow("if (%L.peek() == %T.NULL)", READER, JsonToken::class)
-        readFunc.addStatement("%L.nextNull()", READER)
-        readFunc.addStatement("continue")
-        readFunc.endControlFlow()
-        //endregion if
-
-        //region when
-        readFunc.beginControlFlow("when (%L.nextName())", READER)
-        properties.forEach {
-            readFunc.addStatement("%S -> %L = %L.read(%L)", it.key, it.key, it.adapterName, READER)
-        }
-        readFunc.addStatement("else -> %L.skipValue()", READER)
-        readFunc.endControlFlow()
-        //endregion when
-
-        readFunc.endControlFlow()
-        //endregion while
-
-        readFunc.addStatement("%L.endObject()", READER)
-
-        readFunc.addStatement("return %T(%>", clazz.asType())
-
-        properties.forEachIndexed { index, field ->
-            readFunc.addStatement("%L = %L%L%L",
-                    field.name,
-                    field.key,
-                    if (field.nullable) "" else "!!",
-                    if (index == properties.size - 1) "" else ","
-            )
-        }
-
-        readFunc.addStatement("%<)")
-
-        return readFunc.build()
-    }
-
-    /**
-     * Generates a Gson [TypeAdapterFactory]
-     */
-    private fun generateTypeAdapterFactory(factoryClassName: String, classes: List<ClassName>): TypeSpec {
-        log("generating a factory...")
-
-        val factoryBuilder = TypeSpec
-                .classBuilder(factoryClassName)
-                .addAnnotation(getGeneratedAnnotation())
-                .addSuperinterface(TypeAdapterFactory::class)
-
-        val generic = TypeVariableName.invoke("T")
-        val returnType = ParameterizedTypeName.get(TypeAdapter::class.asClassName(), generic)
-
-        val createMethod = FunSpec.builder("create")
-                .addModifiers(KModifier.OVERRIDE)
-                .addAnnotation(
-                        AnnotationSpec.builder(SuppressWarnings::class)
-                                .addMember("%S", "unchecked")
-                                .build()
-                )
-                .addTypeVariable(generic)
-                .addParameter(GSON, Gson::class)
-                .addParameter(TYPE, ParameterizedTypeName.get(TypeToken::class.asClassName(), generic))
-                .returns(returnType.asNullable())
-
-        val resultVarName = "typeAdapter"
-
-        createMethod.addStatement("val %L = when {%>", resultVarName)
-
-        classes.forEach {
-            val adapter = ClassName(it.packageName(), getTypeAdapterClassName(it))
-            createMethod.addStatement("%T::class.java.isAssignableFrom(%L.rawType) -> %T(%L)", it, TYPE, adapter, GSON)
-        }
-
-        createMethod.addStatement("else -> null")
-        createMethod.addStatement("%<}")
-
-        createMethod.addStatement("return %L as? %T", resultVarName, returnType)
-
-        factoryBuilder.addFunction(createMethod.build())
-
-        return factoryBuilder.build()
-    }
-
-    private fun log(msg: String, kind: Diagnostic.Kind = Diagnostic.Kind.NOTE) {
+    protected fun log(msg: String, kind: Diagnostic.Kind = Diagnostic.Kind.NOTE) {
         processingEnv.messager.printMessage(kind, "${javaClass.name}: $msg")
     }
 
-    private fun getGeneratedAnnotation() = AnnotationSpec.builder(Generated::class.java)
+    protected fun getGeneratedAnnotation() = AnnotationSpec.builder(Generated::class.java)
             .addMember("value = [%S]", javaClass.name)
             .addMember("comments = %S", REPOSITORY_URL)
             .build()
 
-    private fun getTypeAdapterClassName(className: ClassName): String = "${className.simpleName()}TypeAdapter"
+    protected fun getTypeAdapterClassName(className: ClassName): String = "${className.simpleName}TypeAdapter"
 
-    private fun getParameterizedTypeToken(codeBlock: CodeBlock.Builder, type: ParameterizedTypeName, asType: Boolean = false) {
-        codeBlock.add("%T.getParameterized(%T::class.javaObjectType", TypeToken::class, type.rawType.javaToKotlinType())
-
-        type.typeArguments.forEach {
-            codeBlock.add(", ")
-
-            if (it is ParameterizedTypeName) {
-                getParameterizedTypeToken(codeBlock, it, true)
-            } else {
-                codeBlock.add("%T::class.javaObjectType", it.javaToKotlinType())
-            }
+    protected val RoundEnvironment.ksonAnnotatedClasses: Sequence<TypeElement>
+        get() {
+            return getElementsAnnotatedWith(Kson::class.java)
+                    .asSequence()
+                    .filter { it.kind == ElementKind.CLASS }
+                    .filterNot { processingEnv.elementUtils.getPackageOf(it).isUnnamed }
+                    .map { it as TypeElement }
         }
-
-        codeBlock.add(")")
-        if (asType) {
-            codeBlock.add(".getType()")
-        }
-    }
-
-    private fun TypeName.javaToKotlinType(): TypeName {
-        return if (this is ParameterizedTypeName) {
-            ParameterizedTypeName.get(
-                    rawType.javaToKotlinType() as ClassName,
-                    *typeArguments.map { it.javaToKotlinType() }.toTypedArray()
-            )
-        } else {
-            val className = JavaToKotlinClassMap.INSTANCE.mapJavaToKotlin(FqName(toString()))?.asSingleFqName()?.asString()
-
-            return if (className == null) {
-                this
-            } else {
-                ClassName.bestGuess(className)
-            }
-        }
-    }
-
 }

@@ -12,7 +12,7 @@ version = kson.version
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile 'com.squareup:kotlinpoet:0.7.0'
+    compile 'com.squareup:kotlinpoet:1.3.0'
     compile 'com.google.code.gson:gson:2.8.2'
 
     compile project(':kson-annotation')
@@ -20,4 +20,7 @@ dependencies {
     testCompile "junit:junit:4.12"
     testCompile "org.assertj:assertj-core:3.10.0"
     testCompile "org.jetbrains.kotlin:kotlin-test"
+
+    compile "net.ltgt.gradle.incap:incap:0.2"
+    kapt "net.ltgt.gradle.incap:incap-processor:0.2"
 }

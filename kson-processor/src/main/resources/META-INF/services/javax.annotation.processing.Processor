@@ -1,1 +1,2 @@
-dev.afanasev.kson.processor.KsonProcessor
+dev.afanasev.kson.processor.KsonAdapterFactoryProcessor
+dev.afanasev.kson.processor.KsonTypeAdapterProcessor

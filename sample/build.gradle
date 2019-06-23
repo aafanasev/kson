@@ -16,6 +16,6 @@ dependencies {
 
 // Optional, let IDE know generated classes
 sourceSets {
-    main.java.srcDirs += "build/generated/source/kaptKotlin/main"
-    test.java.srcDirs += "build/generated/source/kaptKotlin/test"
+    main.java.srcDirs += "build/generated/source/kapt/main"
+    test.java.srcDirs += "build/generated/source/kapt/test"
 }
