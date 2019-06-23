@@ -1,5 +1,6 @@
 package dev.afanasev.kson.processor
 
+import com.google.auto.service.AutoService
 import com.google.gson.Gson
 import com.google.gson.TypeAdapter
 import com.google.gson.annotations.SerializedName
@@ -13,6 +14,7 @@ import dev.afanasev.kson.annotation.Kson
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType
 import org.jetbrains.annotations.Nullable
+import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.ElementKind
 import javax.lang.model.element.TypeElement
@@ -24,6 +26,7 @@ import kotlin.reflect.jvm.internal.impl.name.FqName
  * Generates a Gson [TypeAdapter] for all [Kson] annotated classes.
  */
 @IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.ISOLATING)
+@AutoService(Processor::class)
 class KsonTypeAdapterProcessor : KsonProcessor() {
 
     override fun getSupportedAnnotationTypes() = setOf(Kson::class.java.name)
