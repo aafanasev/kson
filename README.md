@@ -93,3 +93,9 @@ dependencies {
     kapt 'dev.afanasev:kson-processor:<version>'
 }
 ```
+
+## Mentions
+
+- [Medium](https://medium.com/@jokuskay/kson-auto-generate-gson-adapters-for-kotlin-data-classes-17af43b6c267)
+- [Android Weekly](https://androidweekly.net/issues/issue-365)
+- [Habr](https://habr.com/ru/company/digital-ecosystems/blog/459062/)
