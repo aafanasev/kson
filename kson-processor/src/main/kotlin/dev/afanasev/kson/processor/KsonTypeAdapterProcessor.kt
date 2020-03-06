@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable
 import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.lang.model.element.ElementKind
+import javax.lang.model.element.Modifier
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
 import kotlin.reflect.jvm.internal.impl.builtins.jvm.JavaToKotlinClassMap
@@ -48,7 +49,7 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
 
         val properties = clazz.enclosedElements
                 .asSequence()
-                .filter { it.kind == ElementKind.FIELD }
+                .filter { it.kind == ElementKind.FIELD && !it.modifiers.contains(Modifier.STATIC) }
                 .map { it as VariableElement }
                 .map {
                     val key = it.getAnnotation(SerializedName::class.java)?.value ?: it.simpleName
