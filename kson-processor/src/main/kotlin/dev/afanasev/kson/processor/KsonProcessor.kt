@@ -43,7 +43,9 @@ abstract class KsonProcessor : AbstractProcessor() {
             .addMember("comments = %S", REPOSITORY_URL)
             .build()
 
-    protected fun getTypeAdapterClassName(className: ClassName): String = "${className.simpleName}TypeAdapter"
+    protected fun getTypeAdapterClassName(className: ClassName): String {
+        return "${className.simpleNames.joinToString(separator = "_")}TypeAdapter"
+    }
 
     protected val RoundEnvironment.ksonAnnotatedClasses: Sequence<TypeElement>
         get() {
