@@ -1,0 +1,17 @@
+name: Release
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  bintray_upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: ./gradlew bintrayUpload --stacktrace
+        env:
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
