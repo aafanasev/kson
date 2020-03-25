@@ -173,8 +173,9 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
         //region when
         readFunc.beginControlFlow("when (%L.nextName())", READER)
         properties.forEach {
-            val allKeys : List<String> = listOf(it.key) + it.alternativeKeys
-            readFunc.addStatement(allKeys.joinToString(separator = ", ") { "%S" } + " -> %L = %L.read(%L)", *allKeys.toTypedArray(), it.key, it.adapterName, READER)
+            val allKeys : List<String> = listOf(it.key) + it.alternateKeys
+            val keysFormat = allKeys.joinToString(separator = ", ") { "%S" }
+            readFunc.addStatement("$keysFormat -> %L = %L.read(%L)", *allKeys.toTypedArray(), it.key, it.adapterName, READER)
         }
         readFunc.addStatement("else -> %L.skipValue()", READER)
         readFunc.endControlFlow()

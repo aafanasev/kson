@@ -6,7 +6,7 @@ import com.squareup.kotlinpoet.TypeName
 
 internal data class KProperty(
         val key: String,
-        val alternativeKeys: List<String>,
+        val alternateKeys: List<String>,
         val name: String,
         val type: TypeName,
         val nullable: Boolean
