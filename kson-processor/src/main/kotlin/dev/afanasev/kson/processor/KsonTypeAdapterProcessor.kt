@@ -53,11 +53,12 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
                 .map { it as VariableElement }
                 .map {
                     val key = it.getAnnotation(SerializedName::class.java)?.value ?: it.simpleName
+                    val alternateKeys = it.getAnnotation(SerializedName::class.java)?.alternate?.toList() ?: emptyList()
                     val name = it.simpleName
                     val type = it.asType().asTypeName()
                     val nullable = it.getAnnotation(Nullable::class.java) != null
 
-                    KProperty(key.toString(), name.toString(), type, nullable)
+                    KProperty(key.toString(), alternateKeys, name.toString(), type, nullable)
                 }
                 .toList()
 
@@ -172,7 +173,8 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
         //region when
         readFunc.beginControlFlow("when (%L.nextName())", READER)
         properties.forEach {
-            readFunc.addStatement("%S -> %L = %L.read(%L)", it.key, it.key, it.adapterName, READER)
+            val allKeys : List<String> = listOf(it.key) + it.alternativeKeys
+            readFunc.addStatement(allKeys.joinToString(separator = ", ") { "%S" } + " -> %L = %L.read(%L)", *allKeys.toTypedArray(), it.key, it.adapterName, READER)
         }
         readFunc.addStatement("else -> %L.skipValue()", READER)
         readFunc.endControlFlow()
