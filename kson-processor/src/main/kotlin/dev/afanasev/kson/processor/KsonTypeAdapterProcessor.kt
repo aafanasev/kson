@@ -52,12 +52,20 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
                 .filter { it.kind == ElementKind.FIELD && !it.modifiers.contains(Modifier.STATIC) }
                 .map { it as VariableElement }
                 .map {
-                    val key = it.getAnnotation(SerializedName::class.java)?.value ?: it.simpleName
+                    val serializedNameAnnotation = it.getAnnotation(SerializedName::class.java)
+                    val key = serializedNameAnnotation?.value ?: it.simpleName
+                    val alternateKeys = serializedNameAnnotation?.alternate?.toSet() ?: emptySet()
                     val name = it.simpleName
                     val type = it.asType().asTypeName()
                     val nullable = it.getAnnotation(Nullable::class.java) != null
 
-                    KProperty(key.toString(), name.toString(), type, nullable)
+                    KProperty(
+                        key = key.toString(),
+                        alternateKeys = alternateKeys,
+                        name = name.toString(),
+                        type = type,
+                        nullable = nullable
+                    )
                 }
                 .toList()
 
@@ -172,7 +180,9 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
         //region when
         readFunc.beginControlFlow("when (%L.nextName())", READER)
         properties.forEach {
-            readFunc.addStatement("%S -> %L = %L.read(%L)", it.key, it.key, it.adapterName, READER)
+            val allKeys : Set<String> = setOf(it.key) + it.alternateKeys
+            val keysFormat = allKeys.joinToString(separator = ", ") { "%S" }
+            readFunc.addStatement("$keysFormat -> %L = %L.read(%L)", *allKeys.toTypedArray(), it.key, it.adapterName, READER)
         }
         readFunc.addStatement("else -> %L.skipValue()", READER)
         readFunc.endControlFlow()

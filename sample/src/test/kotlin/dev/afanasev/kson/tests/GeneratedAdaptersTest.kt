@@ -34,7 +34,7 @@ data class EntityWithEntity(val entity: Entity, val entityWithNulls: EntityWithN
 @Kson
 data class EntityWithCustomKeys(
         @SerializedName("customKey1") val key1: String,
-        @SerializedName("customKey2") val key2: String)
+        @SerializedName("customKey2", alternate = ["key2", "alternateKey2"]) val key2: String)
 
 @Kson
 data class EntityWithNestedCollections(val items: List<List<String>>)
@@ -226,6 +226,34 @@ class GeneratedAdaptersTest {
     fun `should use reflective adapter if factory is not registered`() {
         val adapter = Gson().getAdapterName(EntityWithNestedCollections::class)
         assertThat(adapter).contains(REFLECTIVE_TYPE_ADAPTER_FACTORY_NAME)
+    }
+
+    @Test
+    fun `should use alternate field from annotation`() {
+        val json = """
+            {
+                "customKey1": "first",
+                "key2": "second"
+            }
+            """
+
+        val entity = gson.fromJson(json, EntityWithCustomKeys::class.java)
+
+        assertThat(entity.key2).isEqualTo("second")
+    }
+
+    @Test
+    fun `should use all alternate fields from annotation`() {
+        val json = """
+            {
+                "customKey1": "first",
+                "alternateKey2": "second"
+            }
+            """
+
+        val entity = gson.fromJson(json, EntityWithCustomKeys::class.java)
+
+        assertThat(entity.key2).isEqualTo("second")
     }
 
     private fun Gson.getAdapterName(cls: KClass<*>) = getAdapter(cls.java).javaClass.name
