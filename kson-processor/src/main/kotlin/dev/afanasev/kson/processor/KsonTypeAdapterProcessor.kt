@@ -8,8 +8,19 @@ import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asClassName
+import com.squareup.kotlinpoet.asTypeName
+import dev.afanasev.kson.annotation.Default
 import dev.afanasev.kson.annotation.Kson
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessor
 import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType
@@ -60,11 +71,11 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
                     val nullable = it.getAnnotation(Nullable::class.java) != null
 
                     KProperty(
-                        key = key.toString(),
-                        alternateKeys = alternateKeys,
-                        name = name.toString(),
-                        type = type,
-                        nullable = nullable
+                            key = key.toString(),
+                            alternateKeys = alternateKeys,
+                            name = name.toString(),
+                            type = type,
+                            nullable = nullable
                     )
                 }
                 .toList()
@@ -163,6 +174,7 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
 
         properties.forEach {
             readFunc.addStatement("var ${it.key}: %L = null", it.type.javaToKotlinType().asNullable())
+            readFunc.addStatement("var ${it.key}Assigned = false")
         }
 
         readFunc.addStatement("%L.beginObject()", READER)
@@ -180,9 +192,12 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
         //region when
         readFunc.beginControlFlow("when (%L.nextName())", READER)
         properties.forEach {
-            val allKeys : Set<String> = setOf(it.key) + it.alternateKeys
+            val allKeys: Set<String> = setOf(it.key) + it.alternateKeys
             val keysFormat = allKeys.joinToString(separator = ", ") { "%S" }
-            readFunc.addStatement("$keysFormat -> %L = %L.read(%L)", *allKeys.toTypedArray(), it.key, it.adapterName, READER)
+            readFunc.addStatement("$keysFormat -> {", *allKeys.toTypedArray())
+            readFunc.addStatement("  %L = %L.read(%L)", it.key, it.adapterName, READER)
+            readFunc.addStatement("  %L = true", it.key + "Assigned")
+            readFunc.addStatement("}")
         }
         readFunc.addStatement("else -> %L.skipValue()", READER)
         readFunc.endControlFlow()
@@ -193,18 +208,38 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
 
         readFunc.addStatement("%L.endObject()", READER)
 
-        readFunc.addStatement("return %T(", clazz.asType())
+        val defaultValueProvider = clazz.enclosedElements
+                .find { it.simpleName.contentEquals("Companion") && it.kind == ElementKind.CLASS }
+                ?.enclosedElements
+                ?.find { it.getAnnotation(Default::class.java) != null }
 
-        properties.forEachIndexed { index, field ->
-            readFunc.addStatement("%L = %L%L%L",
-                    field.name,
-                    field.key,
-                    if (field.nullable) "" else "!!",
-                    if (index == properties.size - 1) "" else ","
-            )
+        if (defaultValueProvider != null) {
+            readFunc.addStatement("val default${clazz.simpleName} = ${clazz.simpleName}.${defaultValueProvider.simpleName}()")
+            readFunc.addStatement("return %T(", clazz.asType())
+            properties.forEach { field ->
+                readFunc.addStatement(
+                        "%L = if (%L) %L%L else %L.%L,",
+                        field.name,
+                        field.key + "Assigned",
+                        field.key,
+                        if (field.nullable) "" else "!!",
+                        "default" + clazz.simpleName,
+                        field.key,
+                )
+            }
+            readFunc.addStatement(")")
+        } else {
+            readFunc.addStatement("return %T(", clazz.asType())
+            properties.forEach { field ->
+                readFunc.addStatement(
+                        "%L = %L%L,",
+                        field.name,
+                        field.key,
+                        if (field.nullable) "" else "!!",
+                )
+            }
+            readFunc.addStatement(")")
         }
-
-        readFunc.addStatement(")")
 
         return readFunc.build()
     }
