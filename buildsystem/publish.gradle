@@ -1,19 +1,68 @@
 apply plugin: "maven-publish"
+apply plugin: "signing"
 
 task sourcesJar(type: Jar) {
-    classifier = "sources"
+    archiveClassifier.set("sources")
     from sourceSets.main.allSource
 }
 
+task javadocJar(type: Jar) {
+    archiveClassifier.set("javadoc")
+}
+
 publishing {
+    def ossrhUsername = (String) project.findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME")
+    def ossrhPassword = (String) project.findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD")
+
+    repositories {
+        maven {
+            name = "sonatype"
+            setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = ossrhUsername
+                password = ossrhPassword
+            }
+        }
+    }
+
     publications {
         Kson(MavenPublication) {
             from components.java
             artifact sourcesJar
+            artifact javadocJar
             groupId kson.group
             artifactId libName
             version kson.version
+
+            pom {
+                name = "Kson"
+                description = "Gson TypeAdapter generator for Kotlin Data Classes"
+                url.set("https://github.com/aafanasev/kson")
+
+                licenses {
+                    license {
+                        name.set("Apache-2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("aafanasev")
+                        name.set("Anatolii Afanasev")
+                        email.set("tafanasyev@gmail.com")
+                    }
+                }
+
+                scm {
+                    url.set("https://github.com/aafanasev/kson")
+                }
+            }
         }
     }
+}
+
+signing {
+    sign(publishing.publications["Kson"])
 }
 
