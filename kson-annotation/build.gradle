@@ -8,9 +8,3 @@ apply from: "$rootDir/buildsystem/publish.gradle"
 archivesBaseName = libName
 group = kson.group
 version = kson.version
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-}
-
-
