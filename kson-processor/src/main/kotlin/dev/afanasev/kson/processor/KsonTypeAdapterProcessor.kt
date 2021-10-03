@@ -109,6 +109,7 @@ class KsonTypeAdapterProcessor : KsonProcessor() {
                 }
 
                 if (it.type is ParameterizedTypeName) {
+                    initializer.add("@%T(\"UNCHECKED_CAST\") ", Suppress::class)
                     initializer.add("%L.getAdapter(", GSON)
                     getParameterizedTypeToken(initializer, it.type)
                     initializer.add(") as %T", type.javaToKotlinType())
