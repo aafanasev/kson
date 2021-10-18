@@ -1,4 +1,5 @@
-[![Download](https://api.bintray.com/packages/aafanasev/maven/kson-processor/images/download.svg)](https://bintray.com/aafanasev/maven/kson-processor/_latestVersion) 
+![maven](https://maven-badges.herokuapp.com/maven-central/net.afanasev/kson-annotation/badge.svg?style=flat
+) 
 [![Android Arsenal]( https://img.shields.io/badge/Android%20Arsenal-KSON-green.svg?style=flat )](https://android-arsenal.com/details/1/6949)
 
 ![Kson - kotlin type adapter generator](kson-logo.png)
@@ -98,3 +99,7 @@ dependencies {
 - [Medium](https://medium.com/@jokuskay/kson-auto-generate-gson-adapters-for-kotlin-data-classes-17af43b6c267)
 - [Android Weekly](https://androidweekly.net/issues/issue-365)
 - [Habr](https://habr.com/ru/company/digital-ecosystems/blog/459062/)
+
+## Code of Conduct
+
+Please refer to [Code of Conduct](CODE_OF_CONDUCT.md) document.
