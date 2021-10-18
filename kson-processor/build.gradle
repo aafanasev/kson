@@ -10,20 +10,26 @@ archivesBaseName = libName
 group = kson.group
 version = kson.version
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile 'com.squareup:kotlinpoet:1.3.0'
-    compile 'com.google.code.gson:gson:2.8.2'
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation 'com.squareup:kotlinpoet:1.10.1'
+    implementation 'com.google.code.gson:gson:2.8.8'
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
-    compile project(':kson-annotation')
+    implementation project(':kson-annotation')
 
-    testCompile "junit:junit:4.12"
-    testCompile "org.assertj:assertj-core:3.10.0"
-    testCompile "org.jetbrains.kotlin:kotlin-test"
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "org.assertj:assertj-core:3.21.0"
+    testImplementation "org.jetbrains.kotlin:kotlin-test"
 
-    compile "net.ltgt.gradle.incap:incap:0.2"
-    kapt "net.ltgt.gradle.incap:incap-processor:0.2"
+    implementation "net.ltgt.gradle.incap:incap:0.3"
+    kapt "net.ltgt.gradle.incap:incap-processor:0.3"
 
-    compile "com.google.auto.service:auto-service-annotations:1.0-rc5"
-    kapt "com.google.auto.service:auto-service:1.0-rc5"
+    implementation "com.google.auto.service:auto-service-annotations:1.0"
+    kapt "com.google.auto.service:auto-service:1.0"
 }

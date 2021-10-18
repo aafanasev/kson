@@ -1,6 +1,7 @@
 package dev.afanasev.kson.sample
 
 import com.google.gson.GsonBuilder
+import dev.afanasev.kson.annotation.Default
 import dev.afanasev.kson.annotation.Kson
 import dev.afanasev.kson.sample.inner.TypeAdapterProvider
 
@@ -12,8 +13,14 @@ data class TestEntity(
 @Kson
 data class KsonEntity(
         val id: Int,
-        val title: String
-)
+        val title: String,
+        val title2: String?,
+) {
+    companion object {
+        @Default
+        fun getDefault() = KsonEntity(23, "def", "sdf")
+    }
+}
 
 const val JSON = """{
     "id": 42,
